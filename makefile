@@ -19,8 +19,10 @@ endif
 
 main:
 	@echo Building main...
+	$(CC) $(CFLAGS) $(SRCDIR)/AES.c
+	$(CC) $(CFLAGS) $(SRCDIR)/base64.c
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c
-	$(CC) main.o -o $(OUTDIR)/main$(BIN_EXT) $(LDFLAGS)
+	$(CC) AES.o base64.o main.o -o $(OUTDIR)/main$(BIN_EXT) $(LDFLAGS)
 	@echo Building AES_Key_gen...
 	$(CC) $(CFLAGS) $(SRCDIR)/AES_Key_gen.c
 	$(CC) AES_Key_gen.o -o $(OUTDIR)/AES_Key_gen$(BIN_EXT) $(LDFLAGS)

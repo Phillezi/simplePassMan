@@ -2,94 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <openssl/aes.h>
-#include <openssl/bio.h>
-#include <openssl/buffer.h>
-#include <openssl/evp.h>
+#include "../include/AES.h"
+#include "../include/base64.h"
 
 #define PASSWORD_FILEPATH "./res/passwords.dat" // Default path, (from the out folder to the passwords.dat file)
-#define AES_KEY_SIZE 256
-#define AES_BLOCK_SIZE 16
-
-void encrypt(const char *input, const char *key, char *output) {
-    AES_KEY aesKey;
-    AES_set_encrypt_key((const unsigned char *)key, AES_KEY_SIZE, &aesKey);
-    AES_encrypt((const unsigned char *)input, (unsigned char *)output, &aesKey);
-}
-
-void decrypt(const char *input, const char *key, char *output) {
-    AES_KEY aesKey;
-    AES_set_decrypt_key((const unsigned char *)key, AES_KEY_SIZE, &aesKey);
-    AES_decrypt((const unsigned char *)input, (unsigned char *)output, &aesKey);
-}
-
-char *base64_encode(const unsigned char *data, int data_len) {
-    BIO *bio, *b64;
-    BUF_MEM *bptr;
-
-    b64 = BIO_new(BIO_f_base64());
-    if (!b64) {
-        // Handle error here
-        return NULL;
-    }
-
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bio = BIO_new(BIO_s_mem());
-    if (!bio) {
-        // Handle error here and free b64
-        BIO_free(b64);
-        return NULL;
-    }
-
-    bio = BIO_push(b64, bio);
-
-    BIO_write(bio, data, data_len);
-    BIO_flush(bio);
-    BIO_get_mem_ptr(bio, &bptr);
-
-    char *buffer = (char *)malloc(bptr->length + 1);
-    if (!buffer) {
-        // Handle error here and free bio and b64
-        BIO_free_all(bio);
-        return NULL;
-    }
-
-    memcpy(buffer, bptr->data, bptr->length);
-    buffer[bptr->length] = 0;
-
-    BIO_free_all(bio);
-    return buffer;
-}
-
-char *base64_decode(const char *input) {
-    BIO *bio, *b64;
-    int decode_len = strlen(input);
-    unsigned char *buffer = (unsigned char *)malloc(decode_len);
-    memset(buffer, 0, decode_len);
-
-    bio = BIO_new_mem_buf(input, -1);
-    if (!bio) {
-        // Handle error here
-        free(buffer);
-        return NULL;
-    }
-
-    b64 = BIO_new(BIO_f_base64());
-    if (!b64) {
-        // Handle error here and free bio
-        BIO_free(bio);
-        free(buffer);
-        return NULL;
-    }
-
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bio = BIO_push(b64, bio);
-
-    BIO_read(bio, buffer, decode_len);
-
-    BIO_free_all(bio);
-    return (char *)buffer;
-}
 
 char **getPasswords(int *nrOfPasswords, const char *key) {
     FILE *fp = fopen(PASSWORD_FILEPATH, "rb");
@@ -231,25 +147,19 @@ void test(const char *encryptionKey) {
     }
 }
 
-/*int main(int argc, char **argv) {
-    const char *encryptionKey = "4BD34B2F2D3DB9AA2B80FB8B172654079AA11284A6EDDE4E37BC89A4CB9A76F3"; // Replace with your actual encryption key
-    //test(encryptionKey);
-    menu(encryptionKey);
-    return 0;
-}*/
+// Example encryption key: "4BD34B2F2D3DB9AA2B80FB8B172654079AA11284A6EDDE4E37BC89A4CB9A76F3"
+// Replace with your actual encryption key, you can run AES_Key_gen to generate a key
+
 int main(int argc, char **argv) {
     if (argc < 2) {
-        // No encryption key provided
         printf("Usage: %s <Encryption_key> [File_Location]\n", argv[0]);
-        return 1; // Return an error code
+        return 1;
     }
 
     const char *encryptionKey = argv[1];
 
     if (argc == 3) {
-        // A file location is provided
         const char *fileLocation = argv[2];
-        // TODO: Write code to put passwords in the specified file.
         printf("Encryption key: %s\nFile Location: %s\n", encryptionKey, fileLocation);
         if(putPasswordsInFile(fileLocation, encryptionKey)) {
             printf("ERROR: File wasnt found\n");
@@ -259,10 +169,9 @@ int main(int argc, char **argv) {
         printf("Encryption key: %s\n", encryptionKey);
         menu(encryptionKey);
     } else {
-        // Incorrect usage
         printf("Usage: %s <Encryption_key> [File_Location]\n", argv[0]);
         return 1;
     }
 
-    return 0; // Return success
+    return 0;
 }
