@@ -2,13 +2,13 @@ SRCDIR=./src
 OUTDIR=./out
 CC=gcc
 CFLAGS = -g -c
-LDFLAGS = -Wall -Werror -Wpedantic -lmingw32 -lssl -lcrypto
+LDFLAGS = -Wall -Werror -Wpedantic -lssl -lcrypto
 
 # Determine the operating system
 ifeq ($(OS),Windows_NT)
 # Windows specific
 	BIN_EXT =.exe
-	LDFLAGS +=
+	LDFLAGS +=-lmingw32
 
 else
 # other os
