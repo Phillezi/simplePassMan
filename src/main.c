@@ -156,6 +156,23 @@ void addPassword(const char *password, const char *key) {
         free(encoded);
 }
 
+int putPasswordsInFile(const char *filename, const char *encryptionKey) {
+    int nrOfPasswords = 0;
+    char **list = getPasswords(&nrOfPasswords, encryptionKey);
+    FILE *fp = fopen(filename, "w+");
+    if(fp!=NULL) {
+        for(int i = 0; i < nrOfPasswords; i++) {
+            fprintf(fp, "%s\n", list[i]);
+        }
+        fclose(fp);
+    } else {
+        destroyPasswordsList(list, nrOfPasswords);
+        return 1;
+    }
+    destroyPasswordsList(list, nrOfPasswords);
+    return 0;
+}
+
 void viewPasswords(const char *encryptionKey) {
     int passListLen = 0;
     char **passList = getPasswords(&passListLen, encryptionKey);
@@ -214,9 +231,38 @@ void test(const char *encryptionKey) {
     }
 }
 
-int main(int argc, char **argv) {
+/*int main(int argc, char **argv) {
     const char *encryptionKey = "4BD34B2F2D3DB9AA2B80FB8B172654079AA11284A6EDDE4E37BC89A4CB9A76F3"; // Replace with your actual encryption key
     //test(encryptionKey);
     menu(encryptionKey);
     return 0;
+}*/
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        // No encryption key provided
+        printf("Usage: %s <Encryption_key> [File_Location]\n", argv[0]);
+        return 1; // Return an error code
+    }
+
+    const char *encryptionKey = argv[1];
+
+    if (argc == 3) {
+        // A file location is provided
+        const char *fileLocation = argv[2];
+        // TODO: Write code to put passwords in the specified file.
+        printf("Encryption key: %s\nFile Location: %s\n", encryptionKey, fileLocation);
+        if(putPasswordsInFile(fileLocation, encryptionKey)) {
+            printf("ERROR: File wasnt found\n");
+            return 1;
+        }
+    } else if (argc == 2) {
+        printf("Encryption key: %s\n", encryptionKey);
+        menu(encryptionKey);
+    } else {
+        // Incorrect usage
+        printf("Usage: %s <Encryption_key> [File_Location]\n", argv[0]);
+        return 1;
+    }
+
+    return 0; // Return success
 }
